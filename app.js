@@ -1,34 +1,33 @@
 import express from "express";
-import taskRouter from "./src/routes/task.routes.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
+//RUTAS
+import authRouter from "./src/routes/auth.routes.js";
+import articleRouter from "./src/routes/article.routes.js";
 import userRouter from "./src/routes/user.routes.js";
-import {start_DB} from "./src/config/database.js"
+import articleTagsRouter from "./src/routes/article_tag.routes.js";
+import tagRouter from "./src/routes/tag.routes.js";
 
+import { startDB } from "./src/config/db.js";
+startDB();
 
-const PORT = process.env.PORT;
 const app = express();
+const PORT = process.env.PORT;
+
 app.use(express.json());
-app.use("/api", taskRouter);
-app.use("/api", userRouter);
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+app.use(cookieParser());
 
-app.use((req, res)=>{
-    res.status(404).json({errorMessage: "Direction not found."});
-});
+app.use("/", authRouter, userRouter, articleRouter, articleTagsRouter, tagRouter);
 
-start_DB().then(()=>{
-    app.listen(PORT, ()=>{
-        console.log("Servidor corriendo en http://localhost:"+PORT);
-    });
-});
-
-
-
-app.get("/users", async (req, res) => {
-    const users = await UserModel.findAll({
-        include: {
-            model: TaskModel,
-            as: "tasks",
-            attributes: ["id", "title", "description", "isComplete"]
-        }
-    });
-    res.json(users);
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto http://localhost:${PORT}`);
 });
